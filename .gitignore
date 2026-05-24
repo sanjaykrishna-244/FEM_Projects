@@ -1,6 +1,6 @@
-/__pycache__
+__pycache__/
+*.pyc
 /1Dbar
 /Curved
 /Frame
 /staticstructural
-/shipdeckframe/__pycache__

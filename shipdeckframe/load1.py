@@ -23,14 +23,16 @@ with pd.ExcelWriter('shipdeckframe/doubleframe.xlsx', mode = 'a', engine = 'open
     dfu.to_excel(writer, sheet_name='Deflection', index= False)
 
 # __ PLOT _____________________________
+plt.figure(figsize = (10, 5))
 for j in details:
     xj = details[j][3]
     yj = details[j][4]
     plt.plot(xj, yj, color = (0, 0, 0), linestyle = ':')
     plt.plot(xj + 1 * u[np.ix_(details[j][0]*3)], yj + 1 * u[np.ix_(details[j][0]*3 + 1)], color = (1/8, 1 - 1/8, 1/10))
 plt.title("Deflection under 100000 N load of Ship-deck like double frame")
-plt.legend()
 plt.grid()
+plt.axis('equal')
 plt.xlabel("X-in m")
 plt.ylabel("Y-in m")
+plt.savefig('shipdeckframe/staticload.png', dpi = 300)
 plt.show()

@@ -22,7 +22,7 @@ A = t * w               #m^2,   area of cross-section
 I = (w * t**3) / 12     #m^4,   second moment of area
 E = 210e+9              #Pa,    Young's Modulus
 rho = 7850              #kg/m^3, Density
-print(I)
+
 # __ COORDINATES ______________________
 L1 = 4; N1 = 20; dl1 = L1/N1
 L2 = 4; N2 = 20; dl2 = L2/N2
