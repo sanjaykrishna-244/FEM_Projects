@@ -40,17 +40,16 @@ B2 = Bi(F, N2)
 B = np.array([B1, B2])
 def Ke(B, C):
     ke = np.zeros((18, 18))
-    print(type(ke[0][0]))
     for i in range(len(B)):
         for j in range(len(B)):
             BI = B[i]; BJ = B[j]
             BtCB = BJ.T @ C @ BI
-            kij = sp.integrate(sp.integrate(sp.integrate(sp.Matrix(BtCB), (x, -0.5, 0.5)), (y, -0.05, 0.05)), (z, -0.05, 0.05))
-            kij = np.array(kij)
-            print(type(kij[0][0]))
+            kij = np.array(sp.integrate(sp.integrate(sp.integrate(sp.Matrix(BtCB), (x, -0.5, 0.5)), (y, -0.05, 0.05)), (z, -0.05, 0.05)))
+            kij = np.asarray(kij, dtype=np.float64)
             dofsi = np.arange(i*9, (i+1)*9)
             dofsj = np.arange(j*9, (j+1)*9)
-            print(dofsi, dofsj)
             ke[np.ix_(dofsi, dofsj)] += kij
-    print(ke.shape)
-Ke(B, C)
+    return ke
+
+ke = Ke(B, C)
+print(np.allclose(ke, ke.T))
