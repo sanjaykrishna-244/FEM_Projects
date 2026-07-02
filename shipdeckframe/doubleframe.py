@@ -7,12 +7,12 @@ import utlities as ut
 import openpyxl as op
 
 # __ GEOMETRY _________________________
-    #          3           4
-    #   (4)---------(5)---------(6)
-    #    |           |           |
-    #   5|          6|          7|
-    #    |           |           |
-    #   (1)---------(2)---------(3)
+    #          3           4                       
+    #   (4)---------(5)---------(6)              
+    #    |           |           |              _____w_____
+    #   5|          6|          7|              |         |
+    #    |           |           |              |         | t
+    #   (1)---------(2)---------(3)             |_________|
     #          1           2
 
 # __ PROPERTIES _______________________
@@ -81,7 +81,7 @@ details = {1: [nodes1, 0, dl1, x1, y1],
            5: [nodes5, 90, dl5, x5, y5], 
            6: [nodes6, 90, dl6, x6, y6], 
            7: [nodes7, 90, dl7, x7, y7]}
-N = len(xy)
+N = len(xy)  
 
 # __ MATRIX ASSEMBLY __________________
 M = np.zeros((3*xy.shape[0], 3*xy.shape[0]))
@@ -100,6 +100,7 @@ for i in details:
 # __ BOUNDARY CONDITIONS ______________
 fixed = np.array([0, 1, 2, 120, 121])
 free = np.setdiff1d(np.arange(0, 3*N), fixed)
+alldf = np.arange(0, 3*N)
 K_red = K[np.ix_(free, free)]
 M_red = M[np.ix_(free, free)]
 

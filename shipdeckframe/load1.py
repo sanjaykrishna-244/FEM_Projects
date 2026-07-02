@@ -6,12 +6,14 @@ from shipdeckframe.doubleframe import K_red, M_red, details, xy, free
 
 N = xy.shape[0]
 # __ STATIC LOAD ANALYSIS _____________
+alldf = np.arange(0, N)
+eles = len(alldf) - 1
 F = np.zeros(3*N)
 F[184] = -100000
 u = np.zeros_like(F)
 u[free] = np.linalg.solve(K_red, F[np.ix_(free)])
 
-# __ EXPORTING DETAILS ________________
+'''# __ EXPORTING DETAILS ________________
 dfu = pd.DataFrame({
     'x' : xy[:, 0],
     'y' : xy[:, 1],
@@ -35,4 +37,4 @@ plt.axis('equal')
 plt.xlabel("X-in m")
 plt.ylabel("Y-in m")
 plt.savefig('shipdeckframe/staticload.png', dpi = 300)
-plt.show()
+plt.show()'''

@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 # __ 1D 2 NODES ELEMENT STIFFNESS MATRIX LE Class __
 #       Each element has 2 nodes (i = 1, 2)
 #       Each Node is a cross-section with 4 nodes
@@ -17,7 +18,7 @@ import numpy as np
 # __ Material Properties _________________
 E = 210e+9
 n = 0.33
-G = E / 2 * (1 + n)
+G = E / (2 * (1 + n))
 l = 2 * G / (1 - 2 * n)
 
 # __ Element Geometry _________________
@@ -25,12 +26,12 @@ L = 1
 
 # __ Stiffness Matrix _________________
 C = np.array([
-    [l + G, l, l, 0, 0, 0],
-    [l, l + G, l, 0, 0, 0],
-    [l, l, l + G, 0, 0, 0],
-    [  0,  0,  0, G, 0, 0],
-    [  0,  0,  0, 0, G, 0],
-    [  0,  0,  0, 0, 0, G],
+    [l + 2 * G, l, l, 0, 0, 0],
+    [l, l + 2 * G, l, 0, 0, 0],
+    [l, l, l + 2 * G, 0, 0, 0],
+    [    0,   0,   0, G, 0, 0],
+    [    0,   0,   0, 0, G, 0],
+    [    0,   0,   0, 0, 0, G],
 ])
 
 # __ Useful Functions _________________
@@ -97,28 +98,60 @@ def dFN_deta(i, coord):
 def b(i, coord):
     zero = np.array([0, 0, 0, 0])
     B = np.array([
-        np.concat([dFN_dx(i, coord), zero, zero]),
-        np.concat([zero, dFN_dzeta(i, coord), zero]),
-        np.concat([zero, zero, dFN_deta(i, coord)]),
-        np.concat([dFN_dzeta(i, coord), dFN_dx(i, coord), zero]),
-        np.concat([zero, dFN_deta(i, coord), dFN_dzeta(i, coord)]),
-        np.concat([dFN_deta(i, coord), zero, dFN_dx(i, coord)]),
+        np.concatenate([dFN_dx(i, coord), zero, zero]),
+        np.concatenate([zero, dFN_dzeta(i, coord), zero]),
+        np.concatenate([zero, zero, dFN_deta(i, coord)]),
+        np.concatenate([zero, dFN_deta(i, coord), dFN_dzeta(i, coord)]),
+        np.concatenate([dFN_deta(i, coord), zero, dFN_dx(i, coord)]),
+        np.concatenate([dFN_dzeta(i, coord), dFN_dx(i, coord), zero]),
     ])
 
     return B
 
+def ke(coord, C):
+    Ke = np.zeros((24, 24))
+    for i in range(2):
+        for j in range(2):
+            Bi = b(i + 1, coord)
+            Bj = b(j + 1, coord)
+            n = Bi.shape[1]
+            kij = Bi.T @ C @ Bj
+            dofi = np.arange(i * n, (i + 1) * n)
+            dofj = np.arange(j * n, (j + 1) * n)
+            Ke[np.ix_(dofi, dofj)] += kij
+
+    return Ke
 
 
 # __ Elemental Stiffness Matrix _______
 δ = 1 / np.sqrt(3)
 gp = np.array([
-    [-δ, -δ,  δ],
-    [-δ,  δ,  δ],
-    [-δ,  δ, -δ],
-    [-δ, -δ, -δ],
-    [ δ, -δ,  δ],
-    [ δ,  δ,  δ],
-    [ δ,  δ, -δ],
-    [ δ, -δ, -δ],
+    [-δ*L/2, -δ,  δ],
+    [-δ*L/2,  δ,  δ],
+    [-δ*L/2,  δ, -δ],
+    [-δ*L/2, -δ, -δ],
+    [ δ*L/2, -δ,  δ],
+    [ δ*L/2,  δ,  δ],
+    [ δ*L/2,  δ, -δ],
+    [ δ*L/2, -δ, -δ],
 ])
 wt = np.array([1, 1, 1, 1, 1, 1, 1, 1])
+
+intgrl = np.array([ke(coord, C) * wt[i] for i, coord in enumerate(gp)])
+intgrl = np.sum(intgrl, axis=0)
+df = pd.DataFrame(intgrl)
+df.to_excel("CUF1D/LEclassstiffness.xlsx", index=False, header=False)
+print(np.allclose(intgrl, intgrl.T))
+print(np.linalg.eigvalsh(intgrl))
+print(np.max(np.abs(intgrl - intgrl.T)))
+
+'''for i, coord in enumerate(gp):
+    B = b(1, coord)
+    eig = np.linalg.eigvalsh(B.T @ C @ B)
+    print(f"{i + 1}: {eig}", end="\n")
+print("##########################################")
+for i, coord in enumerate(gp):
+    K = ke(coord, C)
+    eig = np.linalg.eigvalsh(K)
+    print(f"{i + 1}: {eig}", end="\n")'''
+
