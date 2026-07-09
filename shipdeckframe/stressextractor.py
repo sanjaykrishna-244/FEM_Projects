@@ -65,7 +65,7 @@ def stressextract(dofs, u, details):
     U = np.repeat(U[np.newaxis, :], repeats=y.shape[0], axis = 0)
     y = y.reshape(len(y), 1)
     V = V.reshape(1, len(V))
-    stress = U + (y @ V)
+    stress = E * (U + (y @ V))
     
     return stress
 
@@ -73,5 +73,18 @@ element_nodes = [0, 1]
 dof = {1 : np.array([3*element_nodes[0], 3*element_nodes[0]+1, 3*element_nodes[0]+2, 3*element_nodes[1], 3*element_nodes[1]+1, 3*element_nodes[1]+2])}
 
 ele1stress = stressextract(dof, u, details)
-ele1stress = np.repeat(ele1stress[np.newaxis, :, :], repeats=9, axis = 0)
-print(ele1stress.shape)
+plt.figure(figsize=(11, 1))
+x = np.arange(0, 11) * 0.02
+y = np.arange(-2, 3) * t / 4
+X, Y = np.meshgrid(x, y)
+stress_plot = plt.contourf(X, Y, ele1stress, levels=20, cmap='jet')
+colorbar = plt.colorbar(stress_plot)
+colorbar.set_label('Von Mises Stress (MPa)', fontsize=11)
+plt.title('Stress Contour Plot (Structured Grid)', fontsize=12)
+plt.xlabel('X Coordinate (mm)')
+plt.ylabel('Y Coordinate (mm)')
+plt.grid(True, alpha=0.3)
+
+plt.show()
+
+print(ele1stress)
