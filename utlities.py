@@ -51,3 +51,10 @@ def matrixform(m, M, i, D):
     i2 = 3*D[i+1]
     dof = np.array([i1, i1+1, i1+2, i2, i2+1, i2+2])
     M[np.ix_(dof, dof)] += m
+
+def coordinate_transfor(theta):
+    theta = np.deg2rad(theta)
+    mat = np.array([[ np.cos(theta), np.sin(theta)],
+                    [-np.sin(theta), np.cos(theta)]])
+    
+    return mat

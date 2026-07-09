@@ -9,7 +9,7 @@ N = xy.shape[0]
 alldf = np.arange(0, N)
 eles = len(alldf) - 1
 F = np.zeros(3*N)
-F[184] = -100000
+F[184] = -10000
 u = np.zeros_like(F)
 u[free] = np.linalg.solve(K_red, F[np.ix_(free)])
 
@@ -23,7 +23,7 @@ dfu = pd.DataFrame({
 })
 with pd.ExcelWriter('shipdeckframe/doubleframe.xlsx', mode = 'a', engine = 'openpyxl', if_sheet_exists='replace') as writer:
     dfu.to_excel(writer, sheet_name='Deflection', index= False)
-
+'''
 # __ PLOT _____________________________
 plt.figure(figsize = (10, 5))
 for j in details:
@@ -37,4 +37,4 @@ plt.axis('equal')
 plt.xlabel("X-in m")
 plt.ylabel("Y-in m")
 plt.savefig('shipdeckframe/staticload.png', dpi = 300)
-plt.show()'''
+plt.show()

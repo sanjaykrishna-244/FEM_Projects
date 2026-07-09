@@ -45,46 +45,80 @@ def d3Nb_dx3(x, L):
     d3H4_dx3 = 6/(L**2)
     return np.array([d3H1_dx3, d3H2_dx3, d3H3_dx3, d3H4_dx3])
 
-def stressextract(dofs, u, details):
-    u_l = u[dofs[1]]
-    T = ut.transformation(details[1][1])
+def stressextract(dofs, u, details, id):
+    u_l = u[dofs]
+    T = ut.transformation(details[id][1])
     u_l = T @ u_l
-    x = np.arange(0, 11) * 0.02
+    x = np.arange(0, 6) * details[id][2] / 5
     uvals = u_l[[0, 3]]
     vvals = u_l[[1, 2, 4, 5]]
     U = np.zeros_like(x)
     V = np.zeros_like(x)
     for i in range(len(x)):
-        N = dNa_dx(x[i], details[1][2])
-        B = d2Nb_dx2(x[i], details[1][2])
+        N = dNa_dx(x[i], details[id][2])
+        B = d2Nb_dx2(x[i], details[id][2])
         u_x  = N @ uvals
         v_xx = B @ vvals
         U[i] = u_x
         V[i] = v_xx
     y = np.arange(-2, 3) * t / 4
+    # print(U, V)
     U = np.repeat(U[np.newaxis, :], repeats=y.shape[0], axis = 0)
     y = y.reshape(len(y), 1)
     V = V.reshape(1, len(V))
-    stress = E * (U + (y @ V))
-    
+    strain = U - (y @ V)
+    stress = E * strain
     return stress
 
-element_nodes = [0, 1]
-dof = {1 : np.array([3*element_nodes[0], 3*element_nodes[0]+1, 3*element_nodes[0]+2, 3*element_nodes[1], 3*element_nodes[1]+1, 3*element_nodes[1]+2])}
+elems = np.array([[1, 2, 0, 0, 0]])
+for i in details:
+    node1s = details[i][0][:-1]
+    node2s = details[i][0][1:]
+    ids = i*np.ones(len(node1s), dtype = int)
+    x1s = details[i][3][:-1]
+    y1s = details[i][4][:-1] 
+    elem = np.array([node1s, node2s, ids, x1s, y1s]).T
+    elems = np.concatenate([elems, elem], axis = 0)
+elems = elems[1:, :]
+#print(nodes)
 
-ele1stress = stressextract(dof, u, details)
-plt.figure(figsize=(11, 1))
-x = np.arange(0, 11) * 0.02
-y = np.arange(-2, 3) * t / 4
-X, Y = np.meshgrid(x, y)
-stress_plot = plt.contourf(X, Y, ele1stress, levels=20, cmap='jet')
-colorbar = plt.colorbar(stress_plot)
-colorbar.set_label('Von Mises Stress (MPa)', fontsize=11)
-plt.title('Stress Contour Plot (Structured Grid)', fontsize=12)
-plt.xlabel('X Coordinate (mm)')
-plt.ylabel('Y Coordinate (mm)')
-plt.grid(True, alpha=0.3)
+framestress = []
+for node in elems:
+    N1 = int(node[0])
+    N2 = int(node[1])
+    dofs = np.array([3*N1, 3*N1+1, 3*N1+2, 3*N2, 3*N2+1, 3*N2+2])
+    stress = stressextract(dofs, u, details, node[2])
+    framestress.append(stress)
 
+#print(framestress[85])
+
+x = np.arange(0,6) * 0.04
+y = np.arange(-2,3) * t / 4
+grid = np.array(np.meshgrid(x, y))
+grid = np.moveaxis(grid, 0, -1)
+
+finalcoords = np.array([])
+for i in range(len(elems)):
+    T = ut.coordinate_transfor(details[elems[i][2]][1])
+    coords = grid @ T + np.array([elems[i][3], elems[i][4]])
+    coords = np.round(coords, 3)
+    if i == 0:
+        finalcoords = np.array([coords])
+    else:
+        finalcoords = np.append(finalcoords, [coords], axis = 0)
+
+fig, ax = plt.subplots()
+for e in range(len(elems)):
+    x = finalcoords[e, :, :, 0]
+    y = finalcoords[e, :, :, 1]
+    stress = framestress[e]
+    pcm = ax.pcolormesh(
+        x,
+        y,
+        stress,
+        shading='gouraud',
+        cmap='RdBu_r'
+    )
+fig.colorbar(pcm, ax=ax, label="Stress (Pa)")
+plt.axis("equal")
 plt.show()
-
-print(ele1stress)
