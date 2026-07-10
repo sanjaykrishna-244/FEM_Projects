@@ -13,7 +13,7 @@ F[184] = -10000
 u = np.zeros_like(F)
 u[free] = np.linalg.solve(K_red, F[np.ix_(free)])
 
-'''# __ EXPORTING DETAILS ________________
+# __ EXPORTING DETAILS ________________
 dfu = pd.DataFrame({
     'x' : xy[:, 0],
     'y' : xy[:, 1],
@@ -23,7 +23,7 @@ dfu = pd.DataFrame({
 })
 with pd.ExcelWriter('shipdeckframe/doubleframe.xlsx', mode = 'a', engine = 'openpyxl', if_sheet_exists='replace') as writer:
     dfu.to_excel(writer, sheet_name='Deflection', index= False)
-'''
+
 # __ PLOT _____________________________
 plt.figure(figsize = (10, 5))
 for j in details:
