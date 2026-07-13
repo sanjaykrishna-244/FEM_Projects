@@ -18,17 +18,7 @@ print(beam3.sin())
 
 frame = np.array([(beam1, 20), (beam2, 20), (beam3, 30)])
 
-nodes, nodemap, XY = mesh.OneDMeshing(frame)
+nodes, elements = mesh.OneDMeshing(frame)
 
-plt.figure(figsize=(8,4))
-
-plt.scatter(XY[:,0], XY[:,1], color='k')
-
-for i, (x, y) in enumerate(XY):
-    plt.text(x, y, str(i),
-             fontsize=8,
-             color='red')
-
-plt.axis("equal")
-plt.grid(True)
-plt.show()
+print(nodes[0].ID, nodes[0].coords)
+print(elements[2].ID, elements[2].node1.ID, elements[2].node2.ID)
