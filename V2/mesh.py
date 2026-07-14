@@ -54,4 +54,4 @@ def OneDMeshing(frame):
             i += 1
     
 
-    return nodes, elements
+    return nodes, elements, nodesmap
