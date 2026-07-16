@@ -24,7 +24,6 @@ def ApplyLoads(loading:list):
 def static(loading:list, boundaryconditions:list, K):
     N = K.shape[0] 
     alldofs = np.arange(0, N)
-    print(alldofs.shape)
     fixeddofs = ApplyBC(boundaryconditions)
     freedofs = np.setdiff1d(alldofs, fixeddofs)
 
@@ -38,7 +37,7 @@ def static(loading:list, boundaryconditions:list, K):
 
     u[freedofs] = np.linalg.solve(K_red, F[np.ix_(freedofs)])
 
-    return u
+    return u, F
 
 def modal(boundaryconditions:list, K, M):
     N = K.shape[0] 

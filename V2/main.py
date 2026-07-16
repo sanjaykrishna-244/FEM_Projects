@@ -59,7 +59,7 @@ Load1 = lds.PointLoad(nodesmap[loadpoint], Fy = -2000)
 
 N = K.shape[0]
 
-U = sol.static(loads = [Load1], boundaryconditions=[fixedsupport1, pinsupport], K = K)
+U = sol.static(loading= [Load1], boundaryconditions=[fixedsupport1, pinsupport], K = K)
 print(U[Load1.node.ID*3 + 1])
 Ux = (U[np.arange(0, N, 3)] + XY[:, 0]).reshape(-1, 1)
 Uy = (U[np.arange(1, N, 3)] + XY[:, 1]).reshape(-1, 1)
