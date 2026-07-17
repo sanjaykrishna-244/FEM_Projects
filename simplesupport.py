@@ -45,7 +45,7 @@ simplesupport1 = lds.PinSupport(nodemap[simplesupportpoint1])
 simplesupport2 = lds.PinSupport(nodemap[simplesupportpoint2])
 Load1 = lds.PointLoad(nodemap[loadpoint], Fy=-100)
 
-U, _ = sol.static(loading=[Load1], boundaryconditions=[simplesupport1, simplesupport2], K=K)
+U, f = sol.static(loading=[Load1], boundaryconditions=[simplesupport1, simplesupport2], K=K)
 print(f"The deflection of simply supported beam at middle using FEM = {U[Load1.node.ID*3 + 1]}")
 
 
@@ -55,4 +55,10 @@ print(f"The deflection of simply supported beam at middle with analytical soluti
 err = (np.abs((U[Load1.node.ID*3 + 1] - umax) / umax)) * 100
 print(f"Percentage error = {err}")
 
-pstprcs.EBBTpostprocess(U, elements)
+results = pstprcs.EBBTpostprocess(U, elements, K, f)
+strain = results["Strain"]
+stress = results["Stress"]
+reaction = results["Reactions"]
+internalforce = results["Internal Forces"]
+
+print(stress[0].shape)
