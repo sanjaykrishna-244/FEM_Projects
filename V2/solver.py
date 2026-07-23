@@ -22,6 +22,9 @@ def ApplyLoads(loading:list):
     return loadlist
 
 def static(loading:list, boundaryconditions:list, K):
+    # Loading List contains all the loads along with the loactions as list of loading objects
+    # boundary conditions is the list of all the boundary condition objects(fixed, pin, roller)
+    # K is the assembled stiffness matrix without any dof reductions
     N = K.shape[0] 
     alldofs = np.arange(0, N)
     fixeddofs = ApplyBC(boundaryconditions)
@@ -40,6 +43,7 @@ def static(loading:list, boundaryconditions:list, K):
     return u, F
 
 def modal(boundaryconditions:list, K, M):
+    # M is the assembled mass matrix without any dof reductions
     N = K.shape[0] 
     alldofs = np.arange(0, N)
     print(alldofs.shape)
@@ -56,7 +60,8 @@ def modal(boundaryconditions:list, K, M):
     return freqs, modes
 
 # __ Still under progress _____________
-def harmonic(loading:list, boundaryconditions:list, frequencies, K, M, C = False):
+def harmonic_full(loading:list, boundaryconditions:list, frequencies, K, M, C = None):
+    # frequencies are the sweeping set of frequencies for FRF calculation
     N = K.shape[0] 
     alldofs = np.arange(0, N)
     print(alldofs.shape)
@@ -67,7 +72,7 @@ def harmonic(loading:list, boundaryconditions:list, frequencies, K, M, C = False
     loadeddofs = ApplyLoads(loading)
     for load in loadeddofs: F[load[0]] = load[1]
     
-    if ~C:
+    if C is None:
         C = np.zeros_like(K)
 
     K_red = K[np.ix_(freedofs, freedofs)]
@@ -76,11 +81,72 @@ def harmonic(loading:list, boundaryconditions:list, frequencies, K, M, C = False
     F_red = F[np.ix_(freedofs)]
 
     
-    U = []
+    responses = []
     for f in frequencies: 
         w = 2 * np.pi * f
         D = K_red - (w**2)*M_red
         u = np.linalg.solve(D, F_red)
-        U.append(u)
+        responses.append(u)
+
+    responses = np.array(responses).T
+    U = np.zeros((N, len(frequencies)))
+    U[freedofs, :] = responses
     
     return U
+
+def harmonic_modalsuperposition(loading:list, boundaryconditions:list, frequencies, K, M, C = None, modeshapes = None, retainedmodes = 10):
+    # Modesahpes matrix of column vectors of modes shapes that are direct solution of modal analysis
+    # naturalfreq: set of retained natural frequencies whose modeshape are used to calculate the FRF
+    N = K.shape[0] 
+    alldofs = np.arange(0, N)
+    print(alldofs.shape)
+    fixeddofs = ApplyBC(boundaryconditions)
+    freedofs = np.setdiff1d(alldofs, fixeddofs)
+
+    F = u = np.zeros(N)
+    loadeddofs = ApplyLoads(loading)
+    for load in loadeddofs: F[load[0]] = load[1]
+    
+    if C is None:
+        C = np.zeros_like(K)
+
+    if modeshapes is None:
+        _, modeshapes = modal(boundaryconditions, K, M)
+        modeshapes = modeshapes[np.ix_(freedofs, freedofs)]
+
+    retainedmodes = min(retainedmodes, len(freedofs))
+
+    K_red = K[np.ix_(freedofs, freedofs)]
+    M_red = M[np.ix_(freedofs, freedofs)]
+    C_red = C[np.ix_(freedofs, freedofs)]
+    F_red = F[np.ix_(freedofs)]
+    phi = modeshapes[:, :retainedmodes]
+
+    Km = phi.T @ K_red @ phi; Km = np.round(Km, 8)
+    Mm = phi.T @ M_red @ phi; Mm = np.round(Mm, 8)
+    Cm = phi.T @ C_red @ phi; Cm = np.round(Cm, 8)
+    Fm = phi.T @ F_red
+
+    k = np.diag(Km)
+    m = np.diag(Mm)
+    c = np.diag(Cm)
+    responses = []
+
+    for i, f in enumerate(frequencies):
+        w = 2 * np.pi * f
+        D = k - (w ** 2) * m
+        q = Fm / D
+        u = phi @ q
+        responses.append(u)
+
+    responses = np.array(responses).T
+    U = np.zeros((N, len(frequencies)))
+    U[freedofs, :] = responses
+
+    return U
+    
+
+
+
+
+
