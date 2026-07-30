@@ -18,7 +18,7 @@ import V2.postprocess as pstprcs
 steel = mat.Material()      # Using the default material
 
 # __ Cross-section ____________________
-section = sec.Rectangle(width=0.05, thickness=0.05)   # Using the default cross-section (0.01 X 0.01)
+section = sec.Rectangle(width=0.01, thickness=0.01)   # Using the default cross-section (0.01 X 0.01)
 
 # __ Simple Supported Beam ____________
 beam1 = defin.Beam_element(
@@ -43,7 +43,7 @@ loadpoint = (0.25, 0)
 
 simplesupport1 = lds.PinSupport(nodemap[simplesupportpoint1])
 simplesupport2 = lds.PinSupport(nodemap[simplesupportpoint2])
-Load1 = lds.PointLoad(nodemap[loadpoint], Fy=-1000000)
+Load1 = lds.PointLoad(nodemap[loadpoint], Fy=-1000)
 
 loadlist = [Load1]
 boundaryconditionslist = [simplesupport1, simplesupport2]
