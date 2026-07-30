@@ -40,13 +40,15 @@ def static(loading:list, boundaryconditions:list, K):
 
     u[freedofs] = np.linalg.solve(K_red, F[np.ix_(freedofs)])
 
-    return u, F
+    return {
+        "Deformation" : u,
+        "Loading" : F,
+    }
 
 def modal(boundaryconditions:list, K, M):
     # M is the assembled mass matrix without any dof reductions
     N = K.shape[0] 
     alldofs = np.arange(0, N)
-    print(alldofs.shape)
     fixeddofs = ApplyBC(boundaryconditions)
     freedofs = np.setdiff1d(alldofs, fixeddofs)
 
@@ -56,15 +58,18 @@ def modal(boundaryconditions:list, K, M):
     modes = np.zeros((N, N))
     freqs, modes[np.ix_(freedofs, freedofs)] = eigh(K_red, M_red)
     freqs = np.sqrt(np.abs(freqs)) / (2 * np.pi)
+    modes = modes[np.ix_(alldofs, freedofs)]
 
-    return freqs, modes
+    return {
+        "Natural Frequencies" : freqs,
+        "Modeshapes" : modes
+    }
 
 # __ Still under progress _____________
 def harmonic_full(loading:list, boundaryconditions:list, frequencies, K, M, C = None):
     # frequencies are the sweeping set of frequencies for FRF calculation
     N = K.shape[0] 
     alldofs = np.arange(0, N)
-    print(alldofs.shape)
     fixeddofs = ApplyBC(boundaryconditions)
     freedofs = np.setdiff1d(alldofs, fixeddofs)
 
@@ -92,7 +97,10 @@ def harmonic_full(loading:list, boundaryconditions:list, frequencies, K, M, C = 
     U = np.zeros((N, len(frequencies)))
     U[freedofs, :] = responses
     
-    return U
+    return {
+        "Deformations" : U,
+        "Loading vector" : F
+    }
 
 def harmonic_modalsuperposition(loading:list, boundaryconditions:list, frequencies, K, M, C = None, modeshapes = None, retainedmodes = 10):
     # Modesahpes matrix of column vectors of modes shapes that are direct solution of modal analysis
@@ -111,8 +119,8 @@ def harmonic_modalsuperposition(loading:list, boundaryconditions:list, frequenci
         C = np.zeros_like(K)
 
     if modeshapes is None:
-        _, modeshapes = modal(boundaryconditions, K, M)
-        modeshapes = modeshapes[np.ix_(freedofs, freedofs)]
+        modeshapes = modal(boundaryconditions, K, M)["Modeshapes"]
+        modeshapes = modeshapes[freedofs, :]
 
     retainedmodes = min(retainedmodes, len(freedofs))
 
@@ -143,7 +151,10 @@ def harmonic_modalsuperposition(loading:list, boundaryconditions:list, frequenci
     U = np.zeros((N, len(frequencies)))
     U[freedofs, :] = responses
 
-    return U
+    return {
+        "Deformations" : U,
+        "Loading vector" : F
+    }
     
 
 

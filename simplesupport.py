@@ -29,7 +29,7 @@ beam1 = defin.Beam_element(
 )
 
 # __ Discretisation and Meshing _______
-n = 40
+n = 100
 frame = np.array([(beam1, n)])
 nodes, elements, nodemap = mesh.OneDMeshing(frame)
 
@@ -43,97 +43,66 @@ loadpoint = (0.25, 0)
 
 simplesupport1 = lds.PinSupport(nodemap[simplesupportpoint1])
 simplesupport2 = lds.PinSupport(nodemap[simplesupportpoint2])
-Load1 = lds.PointLoad(nodemap[loadpoint], Fy=-10000)
+Load1 = lds.PointLoad(nodemap[loadpoint], Fy=-1000000)
 
-U, f = sol.static(loading=[Load1], boundaryconditions=[simplesupport1, simplesupport2], K=K)
-#print(f"The deflection of simply supported beam at middle using FEM = {U[Load1.node.ID*3 + 1]}")
+loadlist = [Load1]
+boundaryconditionslist = [simplesupport1, simplesupport2]
 
-
-umax = (Load1.Fy * (beam1.length() ** 3)) / (48 * steel.E * section.Izz)
-#print(f"The deflection of simply supported beam at middle with analytical solutions = {umax}")
-
-err = (np.abs((U[Load1.node.ID*3 + 1] - umax) / umax)) * 100
-#print(f"Percentage error = {err}")
-
-results = pstprcs.EBBTpostprocess(U, elements, K, f)
-strain = results["Strain"]
-stress = results["Stress"]
-reaction = results["Reactions"]
-internalforce = results["Internal Forces"]
-
-#print(stress[0].shape)
-
-freqs, modes = sol.modal(boundaryconditions=[simplesupport1, simplesupport2], K = K, M = M)
-#print(modes[np.arange(0, 123, 3), 7])
-#print(len(freqs), modes.shape)
-#print(nodes[0].coords)
-XY = np.array([list(node.coords) for node in nodes])
-#print(XY.shape, len(nodes))
-x = XY[:, 0]
-y = XY[:, 1]
-i = int(input("Enter the mode number:"))
-modei = modes[:, i]
-u = modei[np.arange(0, 3*len(nodes), 3)]
-v = modei[np.arange(1, 3*len(nodes), 3)]
-X = x + (u )
-Y = y + (v )
-
+staticresults = sol.static(loading=loadlist, boundaryconditions=boundaryconditionslist, K = K)
+staticdeformation = staticresults["Deformation"]
 plt.figure()
-plt.plot(x, y, color='k')
-plt.plot(X, Y, color = (0, 1, 0))
-plt.axis("equal")
-plt.grid(True)
-plt.show()
-
-#print(modes.T @ M @ modes)
-
-'''dfmodes = pd.DataFrame(modes)
-with pd.ExcelWriter(path="sample.xlsx") as writer:
-    dfmodes.to_excel(writer, sheet_name="Modeshapes")
-'''
-print(freqs[:12])
-frequncies = np.arange(0, 20000, 10)
-FRF = sol.harmonic_modalsuperposition(loading=[Load1], boundaryconditions=[simplesupport1, simplesupport2], frequencies=frequncies, K = K, M = M)
-
-modei = FRF[:, 572]
-u = modei[np.arange(0, 3*len(nodes), 3)]
-v = modei[np.arange(1, 3*len(nodes), 3)]
-X = x + (u )
-Y = y + (v )
-
-plt.figure()
-plt.plot(x, y, color='k')
-plt.plot(X, Y, color = (0, 1, 0))
-
-plt.grid(True)
-plt.show()
-
-response22 = FRF[61, :]
-plt.figure()
-plt.plot(frequncies, response22)
-plt.title("Modal Superposition")
-
+for element in elements:
+    dofs = element.dof()
+    u = staticdeformation[dofs[[0, 3]]]
+    v = staticdeformation[dofs[[1, 4]]]
+    x = [element.node1.coords[0], element.node2.coords[0]] + u
+    y = [element.node1.coords[1], element.node2.coords[1]] + v
+    plt.plot(x, y, color = (1, 0, 1))
+plt.axis('equal')
 plt.grid()
+plt.title("Static Deformation under static load of -1000000 vertical load at midspan")
+plt.xlabel("in (m)")
+plt.ylabel("in (m)")
+plt.savefig('staticdeformation.png')
 plt.show()
 
-FRF = sol.harmonic_full(loading=[Load1], boundaryconditions=[simplesupport1, simplesupport2], frequencies=frequncies, K = K, M = M)
-
-modei = FRF[:, 572]
-u = modei[np.arange(0, 3*len(nodes), 3)]
-v = modei[np.arange(1, 3*len(nodes), 3)]
-X = x + (u )
-Y = y + (v )
-
+modalresults = sol.modal(boundaryconditions = boundaryconditionslist, K = K, M = M)
+modeshapes = modalresults["Modeshapes"]
+nat_freqs = modalresults["Natural Frequencies"]
+print((nat_freqs[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]] // 10 )* 10)
 plt.figure()
-plt.plot(x, y, color='k')
-plt.plot(X, Y, color = (0, 1, 0))
-
-plt.grid(True)
-plt.show()
-
-response22 = FRF[61, :]
-plt.figure()
-plt.plot(frequncies, response22)
-plt.title("Full method")
+modeshape1 = modeshapes[:, 2]
+for element in elements:
+    dofs = element.dof()
+    u = modeshape1[dofs[[0, 3]]]
+    v = modeshape1[dofs[[1, 4]]]
+    x = [element.node1.coords[0], element.node2.coords[0]] + u
+    y = [element.node1.coords[1], element.node2.coords[1]] + v
+    plt.plot(x, y, color = (1, 0, 0.5))
 plt.grid()
+plt.title(f"Modeshape of 3rd natural frequncy \n f = {nat_freqs[2]}")
+plt.xlabel("in (m)")
+plt.ylabel("in (m)")
+plt.savefig('modeshape3.png')
+plt.show()
+
+freqs = np.concat(
+    (np.arange(0, (nat_freqs[0] // 10) *10, 10),
+    np.arange((nat_freqs[0] // 10) * 10, (nat_freqs[0] // 10) * 10 + 10, 0.1),
+    np.arange((nat_freqs[0] // 10) * 10 + 10, (nat_freqs[1] // 10) * 10, 10),
+    np.arange((nat_freqs[1] // 10) * 10, (nat_freqs[1] // 10) * 10 + 10, 0.1),
+    np.arange((nat_freqs[1] // 10) * 10 + 10, (nat_freqs[2] // 10) * 10, 10),
+    np.arange((nat_freqs[2] // 10) * 10, (nat_freqs[2] // 10) * 10 + 10, 0.1),
+    np.arange((nat_freqs[2] // 10) * 10 + 10, 5000, 10),)
+)
+harmonicresults = sol.harmonic_full(loadlist, boundaryconditionslist, frequencies= freqs, K = K, M = M)
+responses = harmonicresults["Deformations"]
+midspanVresponse = responses[nodemap[loadpoint].ID*3 + 1, :]
+plt.figure()
+plt.semilogy(freqs, np.abs(midspanVresponse), color = (0, 0, 1))
+plt.title("FRF of simply supported beam\n at midspan under -1000000N harmonic load")
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Deformation (m)")
+plt.grid('both')
+plt.savefig('FRF.png')
 plt.show()
