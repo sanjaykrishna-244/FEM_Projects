@@ -5,16 +5,8 @@ This repository contains my implementations, experiments, and studies in computa
 The goal of this repository is to develop a strong understanding of FEM from first principles by building formulations manually instead of relying entirely on commercial software.
 
 ## Current Projects include:
-### Ship-Deck Like Double Frame
-- Structural dynamics of ship-like frame systems  
-- Natural frequency extraction  
-- Mode shape visualization  
-- Static loading response  
-- Investigation of stiffness effects
-  
-### Cantilever Crane:
-- Modal analysis of crane-like structures
-- Dynamic mode visualization
+### Frame work for Beams and Frames
+A modular finite element analysis (FEA) framework developed in Python for structural mechanics. The project aims to provide a transparent implementation of finite element formulations, including static, modal, and harmonic analyses, while serving as a platform for learning, research, and future extensions to plate, shell, and solid elements.
 
 ### Axial, Bending, Torional vibrational analysis of Euler-Bernoulli Beam
 
