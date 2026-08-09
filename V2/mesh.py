@@ -38,7 +38,13 @@ def OneDMeshing(frame):
         elif beamtype == "Curved":
             theta1 = beamobject.start_angle()
             theta2 = beamobject.end_angle()
-            
+            if(theta1 < theta2): theta2 -= 2*np.pi
+            theta = np.linspace(theta1, theta2, n)
+            center = beamobject.center()
+            radius = beamobject.radius
+            x = np.round(center[0] + radius * np.cos(theta), 5)
+            y = np.round(center[1] + radius * np.sin(theta), 5)
+        
         xy = np.array([x, y]).T
         XY_beams.append((beam, xy))
         x = x.tolist(); X += x

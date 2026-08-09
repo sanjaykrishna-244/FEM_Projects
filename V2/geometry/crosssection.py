@@ -15,4 +15,4 @@ class Circle:
     def __init__(self, radius = 0.01):
         self.radius = radius
         self.A = pi * (radius ** 2.0)
-        self.I = pi * (radius ** 4.0) / 4.0
+        self.Izz = pi * (radius ** 4.0) / 4.0

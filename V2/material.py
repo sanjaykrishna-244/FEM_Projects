@@ -1,6 +1,6 @@
 # __ ISOTROPIC MATERIAL PROPERTIES ____
 class Material:
-    def __init__(self, E = 2e11, nu =0.3, rho = 7850, sigma_y = 250e6, sigma_u = 460e6):
+    def __init__(self, E = 210e9, nu =0.3, rho = 7850, sigma_y = 250e6, sigma_u = 460e6):
         self.E = E
         self.nu = nu
         self.rho = rho

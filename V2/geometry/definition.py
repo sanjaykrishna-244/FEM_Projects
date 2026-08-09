@@ -27,7 +27,7 @@ class StraightBeam_element:
 
 
 class CurvedBeam_element:
-    def __init__(self, start, end, radius, material, section, major_arc = False):
+    def __init__(self, start, end, radius, material, section, major_arc = False, ):
         # Clockwise direction is used as convention for the start and end points of the curved beam.
         # The start and end points are defined such that the beam follows a clockwise path.
         self.start = start              # Start Point of curved Beam
@@ -68,7 +68,7 @@ class CurvedBeam_element:
         S = self.start
         C = self.center()
         theta = np.atan2((S[1] - C[1]), (S[0] - C[0]))
-        theta = theta if theta >= 0 else theta + 2 * np.pi
+        theta = theta + 2*np.pi if theta < 0 else theta
 
         return theta
 
@@ -76,7 +76,7 @@ class CurvedBeam_element:
         E = self.end
         C = self.center()
         theta = np.atan2((E[1] - C[1]), (E[0] - C[0]))
-        theta = theta if theta >= 0 else theta + 2 * np.pi
+        theta = theta + 2 * np.pi if theta < 0 else theta
 
         return theta
 
@@ -90,4 +90,14 @@ class CurvedBeam_element:
 
         return self.radius * angle_diff
 
-    
+
+class Spring_element:
+    def __init__(self, first, second, springconstant, mass1 = 0, mass2 = 0):
+        E = second
+        S = first
+        self.first = S
+        self.second = E
+        self.springconstant = springconstant
+        self.naturallength = np.sqrt((E[0] - S[0]) ** 2 + (E[1] - S[1]) ** 2)
+        self.mass1 = mass1
+        self.mass2 = mass2
